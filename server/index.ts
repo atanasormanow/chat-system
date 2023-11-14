@@ -6,13 +6,15 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
+// atm current directory will change depending on how the server is started
+// TODO: use a separate node for the client
 app.get('/', (req, res) => {
-  res.sendFile(new URL('./index.html', import.meta.url).pathname);
+  res.sendFile(new URL('../index.html', import.meta.url).pathname);
 });
 
 io.on('connection', (socket) => {
   socket.on('chat message', (msg) => {
-    console.log('message: ' + msg);
+    io.emit('chat message', msg);
   });
 });
 
