@@ -13,15 +13,7 @@ const server = createServer(app);
 const io = new Server(server);
 
 const users: { [key: string]: string } = {};
-// Each room has a list of users (their names ?)
-const rooms: { [key: string]: { users: string[] } } = {
-  room1: { users: [] },
-  room2: { users: [] },
-  room3: { users: [] }
-};
-
-// I'll need these in the future:
-// app.use(cors);
+const rooms: { [key: string]: { users: string[] } } = {};
 
 app.set("views", new URL("../src/views", import.meta.url).pathname);
 app.set("view engine", "ejs");
@@ -31,28 +23,35 @@ app.use(express.urlencoded({ extended: true }));
 // Hold all rooms and users in memory.
 // Add some abstraction and separate logic.
 //
-// TODO: endpoint for the "lobby" where all rooms and users are
-// TODO: endpoint for some "room" which could be a single user as well
 // TODO: Should add persistence with redis adapter.
 //
 // At the moment "chat-message" is the one and only room
 app.get("/", (_req, res) => {
-  res.render("index", { rooms: rooms })
+  res.render("index", { rooms })
 });
 
 app.get("/:room", (req, res) => {
-  res.render("room", { room: req.params.room })
+  const room = req.params.room
+
+  if (!rooms[room]) {
+    return res.redirect("/");
+  }
+
+  res.render("room", { room })
 });
 
 app.post("/:room", (req, res) => {
-  if(rooms[req.body.room] === null) {
-    rooms[req.body.room] = { users: [] };
+  const room = req.body.room;
+
+  if (!!rooms[room]) {
+    return res.redirect("/");
   }
-  // Go to the room even if it existed ?
-  // Or go back to index ?
-  res.render("room", { room: req.body.room })
-  // TODO: send message so the other users' room lists get updated
+
+  rooms[room] = { users: [] };
+  res.render("room", { room })
+  io.emit("room-created", room);
 });
+
 
 io.on("connection", (socket) => {
 

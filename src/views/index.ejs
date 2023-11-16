@@ -4,12 +4,36 @@
     <title>Socket.IO chat</title>
   </head>
   <body>
+    <div id="asdf">Hello there<div>
     <div id="room-container">
-      <% console.log(Object.keys(rooms)) %>
       <% Object.keys(rooms).forEach(room => { %>
         <div> <%= room %> </div>
-      <a href="/<%= room %>"> Join </a>
+      <a href="/<%= room %>"> Join ^</a>
       <% }); %>
     </div>
+    <form action="/room" method="POST">
+      <input name="room" type="text" required></input>
+      <button type="submit"> Create Room </button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const roomContainer = document.getElementById("room-container");
+
+      socket.on("room-created", (room) => {
+        const roomElement = document.createElement("div");
+        roomElement.innerText = room;
+
+
+        const joinLink = document.createElement("a");
+        joinLink.href = `/${room}`;
+        joinLink.innerText = "Join ^";
+
+        roomContainer.appendChild(roomElement);
+        roomContainer.appendChild(joinLink);
+      })
+    </script>
   </body>
 </html>
