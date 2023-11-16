@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+  </head>
+  <body>
+    <div id="room-container">
+      <% console.log(Object.keys(rooms)) %>
+      <% Object.keys(rooms).forEach(room => { %>
+        <div> <%= room %> </div>
+      <a href="/<%= room %>"> Join </a>
+      <% }); %>
+    </div>
+  </body>
+</html>

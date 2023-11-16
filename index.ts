@@ -1,9 +1,10 @@
 import express from "express";
-import { createServer } from "node:http";
+import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 
 // TODO: add more types here and there
+// TODO: move types in separate file
 
 const port = process.env.PORT;
 
@@ -12,10 +13,19 @@ const server = createServer(app);
 const io = new Server(server);
 
 const users: { [key: string]: string } = {};
+// Each room has a list of users (their names ?)
+const rooms: { [key: string]: { users: string[] } } = {
+  room1: { users: [] },
+  room2: { users: [] },
+  room3: { users: [] }
+};
 
 // I'll need these in the future:
 // app.use(cors);
-// app.use(express.urlencoded());
+
+app.set("views", new URL("../src/views", import.meta.url).pathname);
+app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true }));
 
 // NOTES:
 // Hold all rooms and users in memory.
@@ -25,9 +35,23 @@ const users: { [key: string]: string } = {};
 // TODO: endpoint for some "room" which could be a single user as well
 // TODO: Should add persistence with redis adapter.
 //
-// At the moment this is the one and only "room" - "chat-message"
-app.get("/", (req, res) => {
-  res.sendFile(new URL("../src/views/index.html", import.meta.url).pathname);
+// At the moment "chat-message" is the one and only room
+app.get("/", (_req, res) => {
+  res.render("index", { rooms: rooms })
+});
+
+app.get("/:room", (req, res) => {
+  res.render("room", { room: req.params.room })
+});
+
+app.post("/:room", (req, res) => {
+  if(rooms[req.body.room] === null) {
+    rooms[req.body.room] = { users: [] };
+  }
+  // Go to the room even if it existed ?
+  // Or go back to index ?
+  res.render("room", { room: req.body.room })
+  // TODO: send message so the other users' room lists get updated
 });
 
 io.on("connection", (socket) => {

@@ -47,6 +47,8 @@
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+      // TODO: this should be changed to the room passed down as a param
+      // Instead of always writing a generic global "chat-message"
       const socket = io();
 
       const name = prompt("What is your name");
