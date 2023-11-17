@@ -4,36 +4,49 @@
     <title>Socket.IO chat</title>
   </head>
   <body>
-    <div id="asdf">Hello there<div>
     <div id="room-container">
-      <% Object.keys(rooms).forEach(room => { %>
-        <div> <%= room %> </div>
-      <a href="/<%= room %>"> Join ^</a>
-      <% }); %>
+      <div> Rooms: </div>
     </div>
     <form action="/room" method="POST">
       <input name="room" type="text" required></input>
       <button type="submit"> Create Room </button>
     </form>
+    <div id="user-container">
+      <div> Users: </div>
+    </div>
+    <div id="personal-messages">
+      <div> Personal Messages: </div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
       const socket = io();
+      const rooms = <%- rooms %>;
 
-      const roomContainer = document.getElementById("room-container");
+      const addToRoomContainer = addItemTo.bind(this, "room-container");
+      const addToPersonalMessages = addItemTo.bind(this, "personal-messages");
 
-      socket.on("room-created", (room) => {
+      Object.keys(rooms).forEach(addToRoomContainer);
+      socket.on("room-created", addToRoomContainer);
+      socket.on("pm-created", addToPersonalMessages);
+      // TODO: Users should enter a username and connect on this page
+      // instead of doing so in room.ejs
+      // Without this personal messages cannot be shown
+      // since the user is still unknown at this point
+
+      function addItemTo(parentId, room) {
+        const parent = document.getElementById(parentId);
+
         const roomElement = document.createElement("div");
         roomElement.innerText = room;
 
-
         const joinLink = document.createElement("a");
         joinLink.href = `/${room}`;
-        joinLink.innerText = "Join ^";
+        joinLink.innerText = "<- Join";
 
-        roomContainer.appendChild(roomElement);
-        roomContainer.appendChild(joinLink);
-      })
+        roomElement.appendChild(joinLink);
+        parent.appendChild(roomElement);
+      }
     </script>
   </body>
 </html>

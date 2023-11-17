@@ -1,2 +1,1 @@
-# chat-system
-A basic chat system in nodejs
+A basic chat system in nodejs, using socket.io

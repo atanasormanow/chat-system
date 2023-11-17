@@ -1,9 +1,17 @@
 import express from "express";
 import { createServer } from "http";
-import { Server, Socket } from "socket.io";
+import { getUserRooms } from "./src/utils.js";
+import { Server } from "socket.io";
+import { Rooms } from "./src/types.js";
 
-// TODO: add more types here and there
-// TODO: move types in separate file
+// TODO: Add some abstraction separate logic in layers
+// TODO: Maybe use namespaces to distinguish user chats from room chats
+//       Since some username and room name could match
+//
+// Bonus improvements:
+// - Persistence and sessions
+// - Scale up (use Redis Adapter or serverSideEmit with manual config)
+// - Subscriptions (instead of listening only to the currently joined chat)
 
 const port = process.env.PORT;
 
@@ -11,18 +19,14 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-const rooms: { [key: string]: { users: { [key: string]: string } } } = {};
+const rooms: Rooms = {};
 
 app.set("views", new URL("../src/views", import.meta.url).pathname);
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
-// NOTES:
-// Add some abstraction and separate logic.
-//
-// TODO: Maybe add persistence with redis adapter.
 app.get("/", (_req, res) => {
-  res.render("index", { rooms })
+  res.render("index", { rooms: JSON.stringify(rooms) })
 });
 
 app.get("/:room", (req, res) => {
@@ -31,9 +35,17 @@ app.get("/:room", (req, res) => {
   if (!rooms[room]) {
     return res.redirect("/");
   }
-
   res.render("room", { room })
 });
+
+// TODO: How does a user know he is getting messaged ???
+// The "user-connect" has to happen when index is opened
+// And there should be "user-joined" for the per chat "joined" message
+// app.get("/:pm", (req, res) => {
+//   const user = req.params.user
+//   //TODO: use namespace
+
+// });
 
 app.post("/:room", (req, res) => {
   const room = req.body.room;
@@ -64,7 +76,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    getUserRooms(socket).forEach(room => {
+    getUserRooms(socket, rooms).forEach(room => {
       socket.to(room).emit(
         "chat-message",
         `${rooms[room].users[socket.id]} left`
@@ -72,15 +84,12 @@ io.on("connection", (socket) => {
     });
   });
 
+  // For dev purposes only
+  socket.onAny((event, ...args) => {
+    console.log(event, args);
+  });
+
 });
-
-
-// NOTE: Could be done with a single reduce as well
-function getUserRooms(socket: Socket): string[] {
-  return Object.entries(rooms)
-    .filter(([name, room]) => !!room.users[socket.id])
-    .map(([name, _room]) => name);
-}
 
 server.listen(port, () => {
   console.log(`server running at http://localhost:${port}`);
