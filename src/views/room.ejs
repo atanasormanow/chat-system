@@ -47,13 +47,13 @@
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      // TODO: this should be changed to the room passed down as a param
-      // Instead of always writing a generic global "chat-message"
+      const room = "<%= room %>";
+
       const socket = io();
 
       const name = prompt("What is your name");
 
-      socket.emit("user-connect", name);
+      socket.emit("user-connect", { room, name });
 
       const form = document.getElementById("form");
       const input = document.getElementById("input");
@@ -64,7 +64,7 @@
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         if (input.value) {
-          socket.emit("chat-message", input.value);
+          socket.emit("chat-message", { room: room, message: input.value});
           input.value = "";
         }
       });
