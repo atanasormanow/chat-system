@@ -38,14 +38,7 @@ app.get("/:room", (req, res) => {
   res.render("room", { room })
 });
 
-// TODO: How does a user know he is getting messaged ???
-// The "user-connect" has to happen when index is opened
-// And there should be "user-joined" for the per chat "joined" message
-// app.get("/:pm", (req, res) => {
-//   const user = req.params.user
-//   //TODO: use namespace
-
-// });
+// TODO: Users cannot know if they're getting messaged if they aren't logged in
 
 app.post("/:room", (req, res) => {
   const room = req.body.room;
